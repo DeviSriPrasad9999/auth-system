@@ -1,0 +1,23 @@
+services:
+  auth-service:
+    build: ./app
+    container_name: auth-service
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:///./test.db
+    volumes:
+      - ./app:/app
+    
+  db:
+    image: postgres:latest
+    container_name: auth-db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=authdb
+    volumes:
+      - auth_data:/var/lib/postgresql/data
+    
+volumes:
+  auth_data:
