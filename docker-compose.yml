@@ -1,17 +1,4 @@
 services:
-  auth-service:
-    build: ./app
-    container_name: auth-service
-    ports:
-      - "8000:8000"
-    environment:
-      - DB_HOST=db
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=authdb
-    volumes:
-      - ./app:/app
-    
   db:
     image: postgres:latest
     container_name: auth-db
@@ -20,9 +7,26 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=authdb
     volumes:
-      - auth_data:/var/lib/postgresql/data
+      - auth_data:/var/lib/postgresql
     ports:
       - 5432:5432
-      
+    restart: always
+
+  auth-service:
+    build: ./app
+    container_name: auth-service
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_DB=authdb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - DB_HOST=db
+      - JWT_SECRET_KEY=secretkey123
+    volumes:
+      - ./app:/app
+    depends_on:
+      - db
+    
 volumes:
   auth_data:

@@ -1,18 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from api.routes.auth import router
-from core.db import get_db, engine
-from models.base import Base
-from contextlib import asynccontextmanager
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    print("Base=============>",Base)
-    print("TABLES KNOWN TO SQLALCHEMY:", Base.metadata.tables.keys())
-    Base.metadata.create_all(bind=engine)
-    yield
-    Base.metadata.clear()
+from sqlalchemy.orm import Session
+from core.db import get_db
+from repositories.user_repository import UserRepository
     
-app = FastAPI(title="Auth Service",lifespan=lifespan)
-
+app = FastAPI(title="Auth Service")
 
 app.include_router(router, prefix="/auth")
