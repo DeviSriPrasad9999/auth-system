@@ -8,10 +8,11 @@ from core.jwt import create_access_token
 from core.refresh_token import generate_refresh_token, refresh_token_expiry
 from repositories.refresh_token_repository import RefreshTokenRepository
 from api.dependencies.auth import get_current_user
+from api.dependencies.rate_limit import login_rate_limit, signup_rate_limit, refresh_token_rate_limit
 
 router = APIRouter()
 
-@router.post("/login",response_model=LoginResponse,status_code=status.HTTP_200_OK)
+@router.post("/login",dependencies=[Depends(login_rate_limit)],response_model=LoginResponse,status_code=status.HTTP_200_OK)
 def login(payload:LoginRequest, db: Session = Depends(get_db)):
     try:
         user = AuthService.login(db,email=payload.email,password=payload.password)
@@ -31,7 +32,7 @@ def login(payload:LoginRequest, db: Session = Depends(get_db)):
     )
     return LoginResponse(access_token=access_token,refresh_token=refresh_token)
 
-@router.post("/signup",response_model=SignupResponse,status_code=status.HTTP_201_CREATED)
+@router.post("/signup",dependencies=[Depends(signup_rate_limit)],response_model=SignupResponse,status_code=status.HTTP_201_CREATED)
 def signup(payload: SignupRequest, db: Session = Depends(get_db)):
     try:
         user = AuthService.signup(db,email=payload.email,password=payload.password)
@@ -47,7 +48,7 @@ def signup(payload: SignupRequest, db: Session = Depends(get_db)):
         email=user.email 
     )
     
-@router.post("/refresh")
+@router.post("/refresh",dependencies=[Depends(refresh_token_rate_limit)])
 def refresh_token(
     payload: RefreshTokenRequest,
     db: Session = Depends(get_db)

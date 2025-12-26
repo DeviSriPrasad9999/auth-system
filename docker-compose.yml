@@ -23,10 +23,19 @@ services:
       - POSTGRES_PASSWORD=postgres
       - DB_HOST=db
       - JWT_SECRET_KEY=secretkey123
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     volumes:
       - ./app:/app
     depends_on:
       - db
     
+  redis:
+    image: redis:latest
+    container_name: auth-redis
+    ports:
+      - "6379:6379"
+    restart: always
+
 volumes:
   auth_data:
