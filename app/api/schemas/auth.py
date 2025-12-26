@@ -8,6 +8,7 @@ class SignupRequest(BaseModel):
 class SignupResponse(BaseModel):
     id: UUID
     email: EmailStr
+    verification_link: str
     
 class LoginRequest(BaseModel):
     email: EmailStr

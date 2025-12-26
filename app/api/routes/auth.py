@@ -9,6 +9,9 @@ from core.refresh_token import generate_refresh_token, refresh_token_expiry
 from repositories.refresh_token_repository import RefreshTokenRepository
 from api.dependencies.auth import get_current_user
 from api.dependencies.rate_limit import login_rate_limit, signup_rate_limit, refresh_token_rate_limit
+from repositories.email_verification_repository import EmailVerificationRepository
+from datetime import datetime, timezone
+
 
 router = APIRouter()
 
@@ -45,7 +48,8 @@ def signup(payload: SignupRequest, db: Session = Depends(get_db)):
     
     return SignupResponse(
         id=user.id,
-        email=user.email 
+        email=user.email,
+        verification_link=user.verification_link
     )
     
 @router.post("/refresh",dependencies=[Depends(refresh_token_rate_limit)])
@@ -75,6 +79,25 @@ def refresh_token(
         access_token=new_access_token,
         refresh_token=new_refresh_token
     )
+
+@router.get("/verify-email")
+def verify_email(token: str, db: Session = Depends(get_db)):
+    record = EmailVerificationRepository.get_valid(db, token)
+    if not record:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired token",
+        )
+
+    user = record.user
+    user.email_verified = True
+    user.email_verified_at = datetime.now(timezone.utc)
+
+    EmailVerificationRepository.delete(db, record)
+    db.commit()
+
+    return {"detail": "Email verified successfully"}
+
 
 @router.post("/logout")
 def logout(
